@@ -56,7 +56,7 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build release APK (unsigned)
+      - name: Build release APK
         working-directory: mobile/android
         run: ./gradlew assembleRelease --no-daemon
 
@@ -76,11 +76,11 @@ jobs:
           BUILD_TOOLS_DIR="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)"
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
 
-          UNSIGNED_APK="app/build/outputs/apk/release/app-release-unsigned.apk"
+          DEBUG_SIGNED_APK="app/build/outputs/apk/release/app-release.apk"
           ALIGNED_APK="app/build/outputs/apk/release/app-release-aligned.apk"
           SIGNED_APK="app/build/outputs/apk/release/app-release-signed.apk"
 
-          "${BUILD_TOOLS_DIR}zipalign" -p -f 4 "$UNSIGNED_APK" "$ALIGNED_APK"
+          "${BUILD_TOOLS_DIR}zipalign" -p -f 4 "$DEBUG_SIGNED_APK" "$ALIGNED_APK"
           "${BUILD_TOOLS_DIR}apksigner" sign \
             --ks release.keystore \
             --ks-pass "pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
@@ -91,12 +91,12 @@ jobs:
 
           rm -f release.keystore
 
-      - name: Upload unsigned APK
+      - name: Upload debug-signed APK
         if: steps.keystore_check.outputs.has_keystore == 'false'
         uses: actions/upload-artifact@v4
         with:
-          name: calorie-tracker-unsigned
-          path: mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          name: calorie-tracker-debug-signed
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
 
       - name: Upload signed APK
         if: steps.keystore_check.outputs.has_keystore == 'true'

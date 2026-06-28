@@ -44,7 +44,7 @@ Before the first run, add these repository secrets (Settings → Secrets and var
 - `EXPO_PUBLIC_API_BASE_URL` — your deployed Worker URL
 - `EXPO_PUBLIC_APP_SHARED_SECRET` — must match `APP_SHARED_SECRET` set on the backend
 
-Optional, for a signed release APK (otherwise the workflow uploads an unsigned APK you'd need to sign yourself before installing on most devices):
+Without these, the workflow still produces an installable APK — Expo's default Android template signs release builds with the bundled debug keystore, so the artifact (`calorie-tracker-debug-signed`) can be sideloaded as-is. Add these secrets only if you want it signed with your own release key instead:
 
 - `ANDROID_KEYSTORE_BASE64` — output of `base64 -w0 your-release.keystore`
 - `ANDROID_KEYSTORE_PASSWORD`
@@ -53,7 +53,7 @@ Optional, for a signed release APK (otherwise the workflow uploads an unsigned A
 
 Generate a keystore once with: `keytool -genkeypair -v -keystore release.keystore -alias calorie-tracker -keyalg RSA -keysize 2048 -validity 10000`
 
-The build artifact (`calorie-tracker-signed` or `calorie-tracker-unsigned`) appears on the workflow run's summary page — download the APK from there and sideload it (enable "Install unknown apps" for your file manager/browser on Android).
+The build artifact (`calorie-tracker-signed` or `calorie-tracker-debug-signed`) appears on the workflow run's summary page — download the APK from there and sideload it (enable "Install unknown apps" for your file manager/browser on Android).
 
 ## How calorie estimation works
 
