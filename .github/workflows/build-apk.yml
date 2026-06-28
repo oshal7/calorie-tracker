@@ -60,8 +60,17 @@ jobs:
         working-directory: mobile/android
         run: ./gradlew assembleRelease --no-daemon
 
+      - name: Check for signing keystore
+        id: keystore_check
+        run: |
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "has_keystore=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_keystore=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Sign APK
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: steps.keystore_check.outputs.has_keystore == 'true'
         working-directory: mobile/android
         run: |
           BUILD_TOOLS_DIR="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)"
@@ -83,14 +92,14 @@ jobs:
           rm -f release.keystore
 
       - name: Upload unsigned APK
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 == '' }}
+        if: steps.keystore_check.outputs.has_keystore == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: calorie-tracker-unsigned
           path: mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
 
       - name: Upload signed APK
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: steps.keystore_check.outputs.has_keystore == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: calorie-tracker-signed
